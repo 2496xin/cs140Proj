@@ -3,8 +3,6 @@ package project;
 import java.util.Map;
 import java.util.TreeMap;
 
-import projectview.States;
-
 public class MachineModel {
 	private class CPU{
 		private int accumulator;
@@ -22,63 +20,7 @@ public class MachineModel {
 	private Memory memory = new Memory();
 	private HaltCallback callback;
 	private boolean withGUI;
-	//As field?
-	private Job[] jobs = new Job[2];
-	private Job currentJob;
 	
-	public int getChangedIndex() {
-		return memory.getChangedIndex();
-	}
-	
-	public Job getCurrentJob() {
-		return currentJob;
-	}
-	
-	public States getCurrentState() {
-		return currentJob.getCurrentState();
-	}
-	
-	public void setCurrentState(States currentState) {
-		currentJob.setCurrentState(currentState);
-	}
-	
-	public void setCurrentJob(int i) {
-		if (i != 0 || i !=1) throw new IllegalArgumentException();
-		currentJob = jobs[i];
-		cpu.accumulator = currentJob.getCurrentAcc();
-		cpu.instructionPointer = currentJob.getCurrentIP();
-		cpu.memoryBase = currentJob.getStartmemoryIndex();
-	}
-
-	public void setCurrentAcc() {
-		currentJob.setCurrentAcc(cpu.accumulator);
-	}
-	
-	public void setCurrentIP() {
-		currentJob.setCurrentIP(cpu.instructionPointer);
-	}
-	
-	public void clearJob() {
-		memory.clearData(currentJob.getStartmemoryIndex(), currentJob.getStartmemoryIndex()+Memory.DATA_SIZE/2);
-		memory.clear(currentJob.getStartcodeIndex(), currentJob.getStartcodeIndex()+currentJob.getCodeSize());
-		cpu.accumulator = 0;
-		cpu.instructionPointer = currentJob.getStartcodeIndex();
-		currentJob.reset();
-	}
-	public void step() {
-		try {
-			if (cpu.instructionPointer < currentJob.getStartcodeIndex() 
-					|| cpu.instructionPointer >= currentJob.getStartcodeIndex()+currentJob.getCodeSize()) 
-				throw new CodeAccessException("IP out of bound");
-			int opcode = getOp(cpu.instructionPointer);
-			int arg = getArg(cpu.instructionPointer);
-			get(opcode).execute(arg);
-		}catch (Exception e){
-			callback.halt();
-			throw e;
-			
-		}
-	}
 	public MachineModel() {
 		this(false, null);
 	}
@@ -86,15 +28,6 @@ public class MachineModel {
 	public MachineModel(boolean withGUI, HaltCallback callback) {
 		this.withGUI = withGUI;
 		this.callback = callback;
-		jobs[0] =  new Job();
-		jobs[1] =  new Job();
-		currentJob = jobs[0];
-		jobs[0].setStartcodeIndex(0);
-		jobs[0].setStartmemoryIndex(0);
-		jobs[1].setStartcodeIndex(Memory.CODE_MAX/4);
-		jobs[1].setStartmemoryIndex(Memory.DATA_SIZE/2 );
-		jobs[0].setCurrentState(States.NOTHING_LOADED);
-		jobs[1].setCurrentState(States.NOTHING_LOADED);
 		
 		//INSTRUCTION_MAP entry for "NOP"
         INSTRUCTIONS.put(0x0, arg -> cpu.incrementIP(1));
@@ -345,6 +278,11 @@ public class MachineModel {
 		memory.setCode(index, op, arg);
 	}
 	
-	
-	
+	public String getHex(int i) {
+		return memory.getHex(i);
+	}
+	public String getDecimal(int i) {
+		return memory.getDecimal(i);
+	}
+
 }
